@@ -1,4 +1,4 @@
-import spaces, ffmpeg, os, sys
+import spaces, ffmpeg, os, sys, torch
 import gradio as gr
 from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor
 from qwen_vl_utils import process_vision_info
@@ -118,6 +118,7 @@ demo = gr.Interface(
     fn=inference,
     inputs=[
         gr.Video(label="Input Video"),
+        gr.Textbox(label="Prompt", value="Describe the camera motion in this video."),
     ],
     outputs=gr.JSON(label="Output JSON"),
     title="",
