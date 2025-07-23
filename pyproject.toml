@@ -11,5 +11,6 @@ dependencies = [
     "loguru>=0.7.3",
     "qwen-vl-utils>=0.0.11",
     "torchvision==0.19.0",
-    "ffmpeg-python>=0.2.0"
+    "ffmpeg-python>=0.2.0",
+    "accelerate==0.32.1",
 ]
