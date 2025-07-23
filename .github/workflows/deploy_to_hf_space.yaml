@@ -77,4 +77,4 @@ jobs:
         if: ${{ steps.check_hf_token.outputs.push_enabled == 'true' }}
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: git push https://HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/HF_USERNAME/SPACE_NAME main"
+        run: git push https://GF-John:$HF_TOKEN@huggingface.co/spaces/GF-John/cam-motion main"
