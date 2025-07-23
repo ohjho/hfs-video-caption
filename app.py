@@ -48,13 +48,13 @@ def load_model(
             model_name,
             torch_dtype=torch.bfloat16,
             attn_implementation="flash_attention_2",
-            device_map="cuda",
+            device_map="auto",
         )
         if use_flash_attention
         else Qwen2_5_VLForConditionalGeneration.from_pretrained(
             model_name,
             torch_dtype="auto",
-            device_map="cuda",
+            device_map="auto",
         )
     )
     return model
@@ -98,7 +98,7 @@ def inference(
         return_tensors="pt",
         **video_kwargs,
     )
-    inputs = inputs.to("cuda")
+    inputs = inputs.to("cuda" if torch.cuda.is_available() else "cpu")
 
     # Inference
     generated_ids = model.generate(**inputs, max_new_tokens=128)
