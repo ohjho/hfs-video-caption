@@ -103,7 +103,7 @@ def inference(
         return_tensors="pt",
         **video_kwargs,
     )
-    # inputs = inputs.to("cuda" if torch.cuda.is_available() else "cpu")
+    inputs = inputs.to(DEVICE)
 
     # Inference
     generated_ids = model.generate(**inputs, max_new_tokens=128)
