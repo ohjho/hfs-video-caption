@@ -22,7 +22,7 @@ subprocess.run(
 
 # The model is trained on 8.0 FPS which we recommend for optimal inference
 
-DTYPE = torch.bfloat16
+DTYPE = torch.bfloat16 if torch.cuda.is_available() else torch.float16
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 logger.info(f"Device: {DEVICE}, dtype: {DTYPE}")
 
@@ -70,7 +70,9 @@ def inference(
     use_flash_attention: bool = True,
 ):
     # default processor
-    processor = AutoProcessor.from_pretrained("Qwen/Qwen2.5-VL-7B-Instruct")
+    processor = AutoProcessor.from_pretrained(
+        "Qwen/Qwen2.5-VL-7B-Instruct", device_map=DEVICE, use_fast=True
+    )
     model = load_model(use_flash_attention=use_flash_attention)
     fps = get_fps_ffmpeg(video_path)
     logger.info(f"{os.path.basename(video_path)} FPS: {fps}")
