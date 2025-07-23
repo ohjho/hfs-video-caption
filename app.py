@@ -24,7 +24,7 @@ subprocess.run(
 
 DTYPE = torch.bfloat16
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-logger.info(f"Device: {device}, dtype: {dtype}")
+logger.info(f"Device: {DEVICE}, dtype: {DTYPE}")
 
 
 def get_fps_ffmpeg(video_path: str):
@@ -65,11 +65,13 @@ def load_model(
 
 @spaces.GPU(duration=120)
 def inference(
-    video_path: str, prompt: str = "Describe the camera motion in this video."
+    video_path: str,
+    prompt: str = "Describe the camera motion in this video.",
+    use_flash_attention: bool = True,
 ):
     # default processor
     processor = AutoProcessor.from_pretrained("Qwen/Qwen2.5-VL-7B-Instruct")
-    model = load_model(use_flash_attention=True)
+    model = load_model(use_flash_attention=use_flash_attention)
     fps = get_fps_ffmpeg(video_path)
     logger.info(f"{os.path.basename(video_path)} FPS: {fps}")
     messages = [
@@ -122,6 +124,7 @@ demo = gr.Interface(
     inputs=[
         gr.Video(label="Input Video"),
         gr.Textbox(label="Prompt", value="Describe the camera motion in this video."),
+        gr.Checkbox(label="Use Flash Attention", value=True),
     ],
     outputs=gr.JSON(label="Output JSON"),
     title="",
