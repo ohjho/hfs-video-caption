@@ -49,14 +49,14 @@ def load_model(
     model = (
         Qwen2_5_VLForConditionalGeneration.from_pretrained(
             model_name,
-            torch_dtype=torch.bfloat16,
+            torch_dtype=DTYPE,  # torch.bfloat16,
             attn_implementation="flash_attention_2",
-            device_map="auto",
+            device_map=DEVICE,  # "auto",
         )
         if use_flash_attention
         else Qwen2_5_VLForConditionalGeneration.from_pretrained(
             model_name,
-            torch_dtype=torch.bfloat16,  # "auto",
+            torch_dtype=DTYPE,  # "auto",
             device_map=DEVICE,
         )
     )
@@ -71,7 +71,10 @@ def inference(
 ):
     # default processor
     processor = AutoProcessor.from_pretrained(
-        "Qwen/Qwen2.5-VL-7B-Instruct", device_map=DEVICE, use_fast=True
+        "Qwen/Qwen2.5-VL-7B-Instruct",
+        device_map=DEVICE,
+        use_fast=True,
+        torch_dtype=DTYPE,
     )
     model = load_model(use_flash_attention=use_flash_attention)
     fps = get_fps_ffmpeg(video_path)
