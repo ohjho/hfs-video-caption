@@ -66,7 +66,7 @@ def inference(
 ):
     # default processor
     processor = AutoProcessor.from_pretrained("Qwen/Qwen2.5-VL-7B-Instruct")
-    model = load_model(use_flash_attention=True)
+    model = load_model(use_flash_attention=False)
     fps = get_fps_ffmpeg(video_path)
     logger.info(f"{os.path.basename(video_path)} FPS: {fps}")
     messages = [
