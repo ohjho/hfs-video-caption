@@ -53,7 +53,7 @@ def load_model(
         if use_flash_attention
         else Qwen2_5_VLForConditionalGeneration.from_pretrained(
             model_name,
-            torch_dtype="auto",
+            torch_dtype=torch.bfloat16,  # "auto",
             device_map="auto",
         )
     )
