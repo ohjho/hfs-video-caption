@@ -75,7 +75,7 @@ def inference(
                 {
                     "type": "video",
                     "video": video_path,
-                    # "fps": fps,
+                    "fps": fps,
                 },
                 {"type": "text", "text": prompt},
             ],
@@ -92,7 +92,7 @@ def inference(
         text=[text],
         images=image_inputs,
         videos=video_inputs,
-        fps=fps,
+        # fps=fps,
         padding=True,
         return_tensors="pt",
         **video_kwargs,
