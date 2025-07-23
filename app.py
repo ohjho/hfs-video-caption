@@ -1,4 +1,4 @@
-import spaces, ffmpeg, os
+import spaces, ffmpeg, os, sys
 import gradio as gr
 from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor
 from qwen_vl_utils import process_vision_info
