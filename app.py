@@ -75,7 +75,7 @@ def inference(
                 {
                     "type": "video",
                     "video": video_path,
-                    "fps": fps,
+                    # "fps": fps,
                 },
                 {"type": "text", "text": prompt},
             ],
