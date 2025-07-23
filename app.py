@@ -22,6 +22,10 @@ subprocess.run(
 
 # The model is trained on 8.0 FPS which we recommend for optimal inference
 
+DTYPE = torch.bfloat16
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+logger.info(f"Device: {device}, dtype: {dtype}")
+
 
 def get_fps_ffmpeg(video_path: str):
     probe = ffmpeg.probe(video_path)
@@ -37,7 +41,6 @@ def get_fps_ffmpeg(video_path: str):
     return num / denom
 
 
-@spaces.GPU(duration=30)
 def load_model(
     model_name: str = "chancharikm/qwen2.5-vl-7b-cam-motion-preview",
     use_flash_attention: bool = True,
@@ -54,7 +57,7 @@ def load_model(
         else Qwen2_5_VLForConditionalGeneration.from_pretrained(
             model_name,
             torch_dtype=torch.bfloat16,  # "auto",
-            device_map="auto",
+            device_map=DEVICE,
         )
     )
     return model
@@ -98,7 +101,7 @@ def inference(
         return_tensors="pt",
         **video_kwargs,
     )
-    inputs = inputs.to("cuda" if torch.cuda.is_available() else "cpu")
+    # inputs = inputs.to("cuda" if torch.cuda.is_available() else "cpu")
 
     # Inference
     generated_ids = model.generate(**inputs, max_new_tokens=128)
