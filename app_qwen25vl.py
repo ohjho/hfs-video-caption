@@ -249,6 +249,10 @@ with gr.Blocks(css=css) as demo:
                     label="Text Prompt",
                     value="Describe the camera motion in this video.",
                 )
+                model_selector = gr.Dropdown(
+                    choices=list(models.keys()),
+                    label="Model",
+                )
                 submit_btn = gr.Button(value="Submit")
             with gr.Column():
                 output_text = gr.Textbox(label="Output Text", interactive=False)
@@ -258,7 +262,7 @@ with gr.Blocks(css=css) as demo:
 
         submit_btn.click(
             run_example,
-            [input_media, text_input],
+            [input_media, text_input, model_selector],
             [output_text, time_taken],
         )  # Ensure output components match yield order
 
