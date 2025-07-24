@@ -258,7 +258,7 @@ with gr.Blocks(css=css) as demo:
 
         submit_btn.click(
             run_example,
-            [input_media, text_input, model_selector],
+            [input_media, text_input],
             [output_text, time_taken],
         )  # Ensure output components match yield order
 
