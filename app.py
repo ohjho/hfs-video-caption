@@ -24,7 +24,7 @@ subprocess.run(
 # For maximum memory efficiency, use bfloat16 if your GPU supports it, otherwise float16.
 DTYPE = (
     torch.bfloat16
-    if torch.cuda.is_available() and torch.cuda.is_bfloat16_supported()
+    if torch.cuda.is_available() and torch.cuda.is_bf16_supported()
     else torch.float16
 )
 # DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -114,6 +114,8 @@ def inference(
         messages, return_video_kwargs=True
     )
 
+    # This prevents PyTorch from building the computation graph for gradients,
+    # saving a significant amount of memory for intermediate activations.
     with torch.no_grad():
         inputs = processor(
             text=[text],
