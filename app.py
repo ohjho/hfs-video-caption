@@ -128,7 +128,7 @@ def inference(
             return_tensors="pt",
             **video_kwargs,
         )
-        inputs = inputs.to(DEVICE)
+        inputs = inputs.to("cuda")
 
         # Inference
         generated_ids = model.generate(**inputs, max_new_tokens=128)
