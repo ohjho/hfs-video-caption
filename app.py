@@ -55,15 +55,17 @@ def load_model(
     model = (
         Qwen2_5_VLForConditionalGeneration.from_pretrained(
             model_name,
-            torch_dtype=DTYPE,  # torch.bfloat16,
+            torch_dtype=DTYPE,
             attn_implementation="flash_attention_2",
-            device_map=DEVICE,  # "auto",
+            device_map=DEVICE,
+            low_cpu_mem_usage=True,
         )
         if use_flash_attention
         else Qwen2_5_VLForConditionalGeneration.from_pretrained(
             model_name,
-            torch_dtype=DTYPE,  # "auto",
+            torch_dtype=DTYPE,
             device_map=DEVICE,
+            low_cpu_mem_usage=True,
         )
     )
     # Set model to evaluation mode for inference (disables dropout, etc.)
@@ -126,7 +128,7 @@ def inference(
             return_tensors="pt",
             **video_kwargs,
         )
-        # inputs = inputs.to(DEVICE)
+        inputs = inputs.to(DEVICE)
 
         # Inference
         generated_ids = model.generate(**inputs, max_new_tokens=128)
