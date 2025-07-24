@@ -1,6 +1,11 @@
+from statistics import quantiles
 import spaces, ffmpeg, os, sys, torch
 import gradio as gr
-from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor
+from transformers import (
+    Qwen2_5_VLForConditionalGeneration,
+    AutoProcessor,
+    BitsAndBytesConfig,
+)
 from qwen_vl_utils import process_vision_info
 from loguru import logger
 
@@ -50,8 +55,17 @@ def get_fps_ffmpeg(video_path: str):
 def load_model(
     model_name: str = "chancharikm/qwen2.5-vl-7b-cam-motion-preview",
     use_flash_attention: bool = True,
+    apply_quantization: bool = True,
 ):
-    # We recommend enabling flash_attention_2 for better acceleration and memory saving, especially in multi-image and video scenarios.
+    # We recommend enabling flash_attention_2 for better acceleration and memory saving,
+    # especially in multi-image and video scenarios.
+    bnb_config = BitsAndBytesConfig(
+        load_in_4bit=True,  # Load model weights in 4-bit
+        bnb_4bit_quant_type="nf4",  # Use NF4 quantization (or "fp4")
+        bnb_4bit_compute_dtype=DTYPE,  # Perform computations in bfloat16/float16
+        bnb_4bit_use_double_quant=True,  # Optional: further quantization for slightly more memory saving
+    )
+
     model = (
         Qwen2_5_VLForConditionalGeneration.from_pretrained(
             model_name,
@@ -59,6 +73,7 @@ def load_model(
             attn_implementation="flash_attention_2",
             device_map=DEVICE,
             low_cpu_mem_usage=True,
+            quantization_config=bnb_config if apply_quantization else None,
         )
         if use_flash_attention
         else Qwen2_5_VLForConditionalGeneration.from_pretrained(
@@ -66,6 +81,7 @@ def load_model(
             torch_dtype=DTYPE,
             device_map=DEVICE,
             low_cpu_mem_usage=True,
+            quantization_config=bnb_config if apply_quantization else None,
         )
     )
     # Set model to evaluation mode for inference (disables dropout, etc.)
@@ -87,10 +103,13 @@ def inference(
     video_path: str,
     prompt: str = "Describe the camera motion in this video.",
     use_flash_attention: bool = True,
+    apply_quantization: bool = True,
 ):
     # default processor
     processor = load_processor()
-    model = load_model(use_flash_attention=use_flash_attention)
+    model = load_model(
+        use_flash_attention=use_flash_attention, apply_quantization=apply_quantization
+    )
 
     # The model is trained on 8.0 FPS which we recommend for optimal inference
     fps = get_fps_ffmpeg(video_path)
@@ -149,7 +168,8 @@ demo = gr.Interface(
     inputs=[
         gr.Video(label="Input Video"),
         gr.Textbox(label="Prompt", value="Describe the camera motion in this video."),
-        gr.Checkbox(label="Use Flash Attention", value=True),
+        gr.Checkbox(label="Use Flash Attention", value=False),
+        gr.Checkbox(label="Apply Quantization", value=True),
     ],
     outputs=gr.JSON(label="Output JSON"),
     title="",
