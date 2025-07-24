@@ -110,11 +110,11 @@ def inference(
     apply_quantization: bool = True,
 ):
     # default processor
-    processor, model = PROCESSOR, MODEL
-    # processor = load_processor()
-    # model = load_model(
-    #     use_flash_attention=use_flash_attention, apply_quantization=apply_quantization
-    # )
+    # processor, model = PROCESSOR, MODEL
+    processor = load_processor()
+    model = load_model(
+        use_flash_attention=use_flash_attention, apply_quantization=apply_quantization
+    )
 
     # The model is trained on 8.0 FPS which we recommend for optimal inference
     fps = get_fps_ffmpeg(video_path)
