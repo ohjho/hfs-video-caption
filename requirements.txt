@@ -80,8 +80,8 @@ starlette==0.47.2
 sympy==1.14.0
 tokenizers==0.21.2
 tomlkit==0.13.3
-torch==2.7.1
-torchvision==0.22.1
+torch
+torchvision
 tqdm==4.67.1
 transformers==4.49.0
 triton==3.3.1 ; platform_machine == 'x86_64' and sys_platform == 'linux'
