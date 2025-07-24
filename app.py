@@ -20,10 +20,16 @@ subprocess.run(
 )
 # --- now we got Flash Attention ---#
 
-# The model is trained on 8.0 FPS which we recommend for optimal inference
-
-DTYPE = torch.bfloat16 if torch.cuda.is_available() else torch.float16
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+# Set target DEVICE and DTYPE
+# For maximum memory efficiency, use bfloat16 if your GPU supports it, otherwise float16.
+DTYPE = (
+    torch.bfloat16
+    if torch.cuda.is_available() and torch.cuda.is_bfloat16_supported()
+    else torch.float16
+)
+# DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+# Use "auto" to let accelerate handle device placement (GPU, CPU, disk)
+DEVICE = "auto"
 logger.info(f"Device: {DEVICE}, dtype: {DTYPE}")
 
 
@@ -60,7 +66,18 @@ def load_model(
             device_map=DEVICE,
         )
     )
+    # Set model to evaluation mode for inference (disables dropout, etc.)
+    model.eval()
     return model
+
+
+def load_processor(model_name="Qwen/Qwen2.5-VL-7B-Instruct"):
+    return AutoProcessor.from_pretrained(
+        model_name,
+        device_map=DEVICE,
+        use_fast=True,
+        torch_dtype=DTYPE,
+    )
 
 
 @spaces.GPU(duration=120)
@@ -70,13 +87,10 @@ def inference(
     use_flash_attention: bool = True,
 ):
     # default processor
-    processor = AutoProcessor.from_pretrained(
-        "Qwen/Qwen2.5-VL-7B-Instruct",
-        device_map=DEVICE,
-        use_fast=True,
-        torch_dtype=DTYPE,
-    )
+    processor = load_processor()
     model = load_model(use_flash_attention=use_flash_attention)
+
+    # The model is trained on 8.0 FPS which we recommend for optimal inference
     fps = get_fps_ffmpeg(video_path)
     logger.info(f"{os.path.basename(video_path)} FPS: {fps}")
     messages = [
@@ -99,28 +113,30 @@ def inference(
     image_inputs, video_inputs, video_kwargs = process_vision_info(
         messages, return_video_kwargs=True
     )
-    inputs = processor(
-        text=[text],
-        images=image_inputs,
-        videos=video_inputs,
-        # fps=fps,
-        padding=True,
-        return_tensors="pt",
-        **video_kwargs,
-    )
-    inputs = inputs.to(DEVICE)
 
-    # Inference
-    generated_ids = model.generate(**inputs, max_new_tokens=128)
-    generated_ids_trimmed = [
-        out_ids[len(in_ids) :]
-        for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
-    ]
-    output_text = processor.batch_decode(
-        generated_ids_trimmed,
-        skip_special_tokens=True,
-        clean_up_tokenization_spaces=False,
-    )
+    with torch.no_grad():
+        inputs = processor(
+            text=[text],
+            images=image_inputs,
+            videos=video_inputs,
+            # fps=fps,
+            padding=True,
+            return_tensors="pt",
+            **video_kwargs,
+        )
+        # inputs = inputs.to(DEVICE)
+
+        # Inference
+        generated_ids = model.generate(**inputs, max_new_tokens=128)
+        generated_ids_trimmed = [
+            out_ids[len(in_ids) :]
+            for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
+        ]
+        output_text = processor.batch_decode(
+            generated_ids_trimmed,
+            skip_special_tokens=True,
+            clean_up_tokenization_spaces=False,
+        )
     return output_text
 
 

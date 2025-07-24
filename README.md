@@ -1,13 +1,13 @@
 ---
-title: Name for you Space App
-emoji: 📚
+title: Camera Motion Detection
+emoji: 📸
 colorFrom: blue
 colorTo: yellow
 sdk: gradio
 sdk_version: 5.32.0
 app_file: app.py
 pinned: false
-short_description: short description for your Space App
+short_description: Demo of the camera motion detection as part of CameraBench
 ---
 
 # The HuggingFace Space Template
