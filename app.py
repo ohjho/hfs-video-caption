@@ -92,7 +92,7 @@ def load_model(
 def load_processor(model_name="Qwen/Qwen2.5-VL-7B-Instruct"):
     return AutoProcessor.from_pretrained(
         model_name,
-        # device_map=DEVICE,
+        device_map=DEVICE,
         use_fast=True,
         torch_dtype=DTYPE,
     )
