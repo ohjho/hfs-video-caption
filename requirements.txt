@@ -3,3 +3,7 @@ torchvision
 transformers
 accelerate
 qwen-vl-utils
+ffmpeg-python
+loguru
+bitsandbytes
+scipy
