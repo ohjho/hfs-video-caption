@@ -85,7 +85,7 @@ def load_model(
 
     # Load model based on family
     match model_family:
-        case "qwen2.5":
+        case "qwen2.5" | "Qwen2.5":
             model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
                 model_name, **common_args
             )
