@@ -117,6 +117,12 @@ MODEL_ZOO = {
     "InternVL3-1B-hf": AutoModelForImageTextToText.from_pretrained(
         "OpenGVLab/InternVL3-1B-hf", device_map=DEVICE, torch_dtype=DTYPE
     ),
+    "InternVL3-2B-hf": AutoModelForImageTextToText.from_pretrained(
+        "OpenGVLab/InternVL3-2B-hf", device_map=DEVICE, torch_dtype=DTYPE
+    ),
+    "InternVL3-8B-hf": AutoModelForImageTextToText.from_pretrained(
+        "OpenGVLab/InternVL3-8B-hf", device_map=DEVICE, torch_dtype=DTYPE
+    ),
 }
 
 PROCESSORS = {
@@ -124,6 +130,8 @@ PROCESSORS = {
     "qwen2.5-vl-7b-instruct": load_processor("Qwen/Qwen2.5-VL-7B-Instruct"),
     "qwen2.5-vl-3b-instruct": load_processor("Qwen/Qwen2.5-VL-3B-Instruct"),
     "InternVL3-1B-hf": load_processor("OpenGVLab/InternVL3-1B-hf"),
+    "InternVL3-2B-hf": load_processor("OpenGVLab/InternVL3-2B-hf"),
+    "InternVL3-8B-hf": load_processor("OpenGVLab/InternVL3-8B-hf"),
 }
 logger.debug("Models and Processors Loaded!")
 
