@@ -66,24 +66,36 @@ def load_model(
         bnb_4bit_use_double_quant=True,  # Optional: further quantization for slightly more memory saving
     )
 
-    model = (
-        Qwen2_5_VLForConditionalGeneration.from_pretrained(
-            model_name,
-            torch_dtype=DTYPE,
-            attn_implementation="flash_attention_2",
-            device_map=DEVICE,
-            low_cpu_mem_usage=True,
-            quantization_config=bnb_config if apply_quantization else None,
-        )
-        if use_flash_attention
-        else Qwen2_5_VLForConditionalGeneration.from_pretrained(
-            model_name,
-            torch_dtype=DTYPE,
-            device_map=DEVICE,
-            low_cpu_mem_usage=True,
-            quantization_config=bnb_config if apply_quantization else None,
-        )
-    )
+    # Determine model family from model name
+    model_family = model_name.split("/")[-1].split("-")[
+        0
+    ]  # Extract model family from name
+
+    # Common model loading arguments
+    common_args = {
+        "torch_dtype": DTYPE,
+        "device_map": DEVICE,
+        "low_cpu_mem_usage": True,
+        "quantization_config": bnb_config if apply_quantization else None,
+    }
+
+    # Add flash attention if supported and requested
+    if use_flash_attention:
+        common_args["attn_implementation"] = "flash_attention_2"
+
+    # Load model based on family
+    match model_family:
+        case "qwen2.5":
+            model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
+                model_name, **common_args
+            )
+        case "InternVL3":
+            model = AutoModelForImageTextToText.from_pretrained(
+                model_name, **common_args
+            )
+        case _:
+            raise ValueError(f"Unsupported model family: {model_family}")
+
     # Set model to evaluation mode for inference (disables dropout, etc.)
     return model.eval()
 
@@ -114,15 +126,21 @@ MODEL_ZOO = {
         use_flash_attention=False,
         apply_quantization=False,
     ),
-    "InternVL3-1B-hf": AutoModelForImageTextToText.from_pretrained(
-        "OpenGVLab/InternVL3-1B-hf", device_map=DEVICE, torch_dtype=DTYPE
+    "InternVL3-1B-hf": load_model(
+        model_name="OpenGVLab/InternVL3-1B-hf",
+        use_flash_attention=False,
+        apply_quantization=True,
     ),
-    "InternVL3-2B-hf": AutoModelForImageTextToText.from_pretrained(
-        "OpenGVLab/InternVL3-2B-hf", device_map=DEVICE, torch_dtype=DTYPE
+    "InternVL3-2B-hf": load_model(
+        model_name="OpenGVLab/InternVL3-2B-hf",
+        use_flash_attention=False,
+        apply_quantization=True,
     ),
-    # "InternVL3-8B-hf": AutoModelForImageTextToText.from_pretrained(
-    #     "OpenGVLab/InternVL3-8B-hf", device_map=DEVICE, torch_dtype=DTYPE
-    # ),
+    "InternVL3-8B-hf": load_model(
+        model_name="OpenGVLab/InternVL3-8B-hf",
+        use_flash_attention=False,
+        apply_quantization=True,
+    ),
 }
 
 PROCESSORS = {
@@ -211,7 +229,7 @@ def inference(
                     generated_ids_trimmed,
                     skip_special_tokens=True,
                     clean_up_tokenization_spaces=False,
-                )
+                )[0]
             case "InternVL3":
                 inputs = processor.apply_chat_template(
                     messages,
