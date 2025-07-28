@@ -146,11 +146,11 @@ MODEL_ZOO = {
         use_flash_attention=False,
         apply_quantization=True,
     ),
-    # "gemma-3n-e4b-it": load_model(
-    #     model_name="google/gemma-3n-e4b-it",
-    #     use_flash_attention=False,
-    #     apply_quantization=True,
-    # ),
+    "gemma-3n-e4b-it": load_model(
+        model_name="google/gemma-3n-e4b-it",
+        use_flash_attention=False,
+        apply_quantization=True,
+    ),
 }
 
 PROCESSORS = {
@@ -160,7 +160,7 @@ PROCESSORS = {
     "InternVL3-1B-hf": load_processor("OpenGVLab/InternVL3-1B-hf"),
     "InternVL3-2B-hf": load_processor("OpenGVLab/InternVL3-2B-hf"),
     "InternVL3-8B-hf": load_processor("OpenGVLab/InternVL3-8B-hf"),
-    # "gemma-3n-e4b-it": load_processor("google/gemma-3n-e4b-it"),
+    "gemma-3n-e4b-it": load_processor("google/gemma-3n-e4b-it"),
 }
 logger.debug("Models and Processors Loaded!")
 
