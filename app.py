@@ -134,23 +134,23 @@ MODEL_ZOO = {
     "InternVL3-1B-hf": load_model(
         model_name="OpenGVLab/InternVL3-1B-hf",
         use_flash_attention=False,
-        apply_quantization=True,
+        apply_quantization=False,
     ),
     "InternVL3-2B-hf": load_model(
         model_name="OpenGVLab/InternVL3-2B-hf",
         use_flash_attention=False,
-        apply_quantization=True,
+        apply_quantization=False,
     ),
     "InternVL3-8B-hf": load_model(
         model_name="OpenGVLab/InternVL3-8B-hf",
         use_flash_attention=False,
         apply_quantization=True,
     ),
-    "gemma-3n-e4b-it": load_model(
-        model_name="google/gemma-3n-e4b-it",
-        use_flash_attention=False,
-        apply_quantization=True,
-    ),
+    # "gemma-3n-e4b-it": load_model(
+    #     model_name="google/gemma-3n-e4b-it",
+    #     use_flash_attention=False,
+    #     apply_quantization=True,
+    # ),
 }
 
 PROCESSORS = {
@@ -160,7 +160,7 @@ PROCESSORS = {
     "InternVL3-1B-hf": load_processor("OpenGVLab/InternVL3-1B-hf"),
     "InternVL3-2B-hf": load_processor("OpenGVLab/InternVL3-2B-hf"),
     "InternVL3-8B-hf": load_processor("OpenGVLab/InternVL3-8B-hf"),
-    "gemma-3n-e4b-it": load_processor("google/gemma-3n-e4b-it"),
+    # "gemma-3n-e4b-it": load_processor("google/gemma-3n-e4b-it"),
 }
 logger.debug("Models and Processors Loaded!")
 
@@ -276,7 +276,7 @@ demo = gr.Interface(
         gr.Textbox(
             label="Prompt",
             lines=3,
-            info="[cam motion](https://huggingface.co/chancharikm/qwen2.5-vl-7b-cam-motion-preview)",
+            info="Some models like [cam motion](https://huggingface.co/chancharikm/qwen2.5-vl-7b-cam-motion-preview) are trained specific prompts",
             value="Describe the camera motion in this video.",
         ),
         gr.Dropdown(label="Model", choices=list(MODEL_ZOO.keys())),
@@ -306,7 +306,8 @@ demo = gr.Interface(
         # gr.Checkbox(label="Apply Quantization", value=True),
     ],
     outputs=gr.JSON(label="Output JSON"),
-    title="",
+    title="Video Captioning with VLM",
+    description='comparing various "small" VLMs on the task of video captioning',
     api_name="video_inference",
 )
 demo.launch(
