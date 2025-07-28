@@ -85,7 +85,9 @@ jobs:
           FORCE_PUSH: ${{ secrets.FORCE_PUSH }}
         run: |
           if [ -z "$FORCE_PUSH" ]; then
-              git push -f https://GF-John:$HF_TOKEN@huggingface.co/spaces/GF-John/video-caption main
+            echo "::notice::FORCE_PUSH secret is not set."
+            git push https://GF-John:$HF_TOKEN@huggingface.co/spaces/GF-John/video-caption main
           else
-              git push https://GF-John:$HF_TOKEN@huggingface.co/spaces/GF-John/video-caption main
+            echo "::notice::FORCE_PUSH secret is set. Doing Force Push toHugging Face Space."
+            git push -f https://GF-John:$HF_TOKEN@huggingface.co/spaces/GF-John/video-caption main
           fi
