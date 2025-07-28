@@ -254,6 +254,7 @@ def inference(
                     tokenize=True,
                     return_dict=True,
                     return_tensors="pt",
+                    fps=fps,
                     # num_frames = 8
                 ).to("cuda", dtype=DTYPE)
 
