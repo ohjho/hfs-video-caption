@@ -129,8 +129,8 @@ def inference(
     video_path: str,
     prompt: str = "Describe the camera motion in this video.",
     model_name: str = "qwen2.5-vl-7b-instruct",
-    # use_flash_attention: bool = True,
-    # apply_quantization: bool = True,
+    custom_fps: int = 8,
+    max_tokens: int = 256,
 ):
     # default processor
     # processor, model = PROCESSOR, MODEL
@@ -142,7 +142,7 @@ def inference(
     processor = PROCESSORS[model_name]
 
     # The model is trained on 8.0 FPS which we recommend for optimal inference
-    fps = get_fps_ffmpeg(video_path)
+    fps = custom_fps if custom_fps else get_fps_ffmpeg(video_path)
     logger.info(f"{os.path.basename(video_path)} FPS: {fps}")
     messages = [
         {
@@ -180,7 +180,7 @@ def inference(
         inputs = inputs.to("cuda")
 
         # Inference
-        generated_ids = model.generate(**inputs, max_new_tokens=128)
+        generated_ids = model.generate(**inputs, max_new_tokens=max_tokens)
         generated_ids_trimmed = [
             out_ids[len(in_ids) :]
             for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
@@ -199,6 +199,21 @@ demo = gr.Interface(
         gr.Video(label="Input Video"),
         gr.Textbox(label="Prompt", value="Describe the camera motion in this video."),
         gr.Dropdown(label="Model", choices=list(MODEL_ZOO.keys())),
+        gr.Number(
+            label="FPS",
+            info="inference sampling rate (Qwen2.5VL is trained on videos with 8 fps); a value of 0 means the FPS of the input video will be used",
+            value=8,
+            minimum=0,
+            step=1,
+        ),
+        gr.slider(
+            label="Max Tokens",
+            info="maximum number of tokens to generate",
+            value=128,
+            minimum=32,
+            maximum=512,
+            step=32,
+        ),
         # gr.Checkbox(label="Use Flash Attention", value=False),
         # gr.Checkbox(label="Apply Quantization", value=True),
     ],
