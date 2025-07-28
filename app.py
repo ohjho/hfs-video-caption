@@ -1,8 +1,8 @@
-from statistics import quantiles
 import spaces, ffmpeg, os, sys, torch
 import gradio as gr
 from transformers import (
     Qwen2_5_VLForConditionalGeneration,
+    AutoModelForImageTextToText,
     AutoProcessor,
     BitsAndBytesConfig,
 )
@@ -85,8 +85,7 @@ def load_model(
         )
     )
     # Set model to evaluation mode for inference (disables dropout, etc.)
-    model.eval()
-    return model
+    return model.eval()
 
 
 def load_processor(model_name="Qwen/Qwen2.5-VL-7B-Instruct"):
@@ -98,23 +97,49 @@ def load_processor(model_name="Qwen/Qwen2.5-VL-7B-Instruct"):
     )
 
 
-MODEL = load_model(use_flash_attention=False, apply_quantization=False)
-PROCESSOR = load_processor()
+logger.debug("Loading Models and Processors...")
+MODEL_ZOO = {
+    "qwen2.5-vl-7b-cam-motion-preview": load_model(
+        model_name="chancharikm/qwen2.5-vl-7b-cam-motion-preview",
+        use_flash_attention=False,
+        apply_quantization=False,
+    ),
+    "qwen2.5-vl-7b-instruct": load_model(
+        model_name="Qwen/Qwen2.5-VL-7B-Instruct",
+        use_flash_attention=False,
+        apply_quantization=False,
+    ),
+    "qwen2.5-vl-3b-instruct": load_model(
+        model_name="Qwen/Qwen2.5-VL-3B-Instruct",
+        use_flash_attention=False,
+        apply_quantization=False,
+    ),
+}
+
+PROCESSORS = {
+    "qwen2.5-vl-7b-cam-motion-preview": load_processor("Qwen/Qwen2.5-VL-7B-Instruct"),
+    "qwen2.5-vl-7b-instruct": load_processor("Qwen/Qwen2.5-VL-7B-Instruct"),
+    "qwen2.5-vl-3b-instruct": load_processor("Qwen/Qwen2.5-VL-3B-Instruct"),
+}
+logger.debug("Models and Processors Loaded!")
 
 
 @spaces.GPU(duration=120)
 def inference(
     video_path: str,
     prompt: str = "Describe the camera motion in this video.",
-    use_flash_attention: bool = True,
-    apply_quantization: bool = True,
+    model_name: str = "qwen2.5-vl-7b-instruct",
+    # use_flash_attention: bool = True,
+    # apply_quantization: bool = True,
 ):
     # default processor
     # processor, model = PROCESSOR, MODEL
-    processor = load_processor()
-    model = load_model(
-        use_flash_attention=use_flash_attention, apply_quantization=apply_quantization
-    )
+    # processor = load_processor()
+    # model = load_model(
+    #     use_flash_attention=use_flash_attention, apply_quantization=apply_quantization
+    # )
+    model = MODEL_ZOO[model_name]
+    processor = PROCESSORS[model_name]
 
     # The model is trained on 8.0 FPS which we recommend for optimal inference
     fps = get_fps_ffmpeg(video_path)
@@ -173,8 +198,9 @@ demo = gr.Interface(
     inputs=[
         gr.Video(label="Input Video"),
         gr.Textbox(label="Prompt", value="Describe the camera motion in this video."),
-        gr.Checkbox(label="Use Flash Attention", value=False),
-        gr.Checkbox(label="Apply Quantization", value=True),
+        gr.Dropdown(label="Model", choices=list(MODEL_ZOO.keys())),
+        # gr.Checkbox(label="Use Flash Attention", value=False),
+        # gr.Checkbox(label="Apply Quantization", value=True),
     ],
     outputs=gr.JSON(label="Output JSON"),
     title="",

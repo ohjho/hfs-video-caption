@@ -1,13 +1,13 @@
 ---
-title: Camera Motion Detection
+title: Video Captioning
 emoji: 📸
 colorFrom: blue
 colorTo: yellow
 sdk: gradio
 sdk_version: 5.32.0
-app_file: app.py #app_qwen25vl.py
+app_file: app.py
 pinned: false
-short_description: Demo of the camera motion detection as part of CameraBench
+short_description: Using VLMs for video captioning
 ---
 
 # The HuggingFace Space Template
