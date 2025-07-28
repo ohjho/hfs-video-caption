@@ -1,4 +1,4 @@
-import spaces, ffmpeg, os, sys, torch
+import spaces, ffmpeg, os, sys, torch, time
 import gradio as gr
 from transformers import (
     Qwen2_5_VLForConditionalGeneration,
@@ -120,9 +120,9 @@ MODEL_ZOO = {
     "InternVL3-2B-hf": AutoModelForImageTextToText.from_pretrained(
         "OpenGVLab/InternVL3-2B-hf", device_map=DEVICE, torch_dtype=DTYPE
     ),
-    "InternVL3-8B-hf": AutoModelForImageTextToText.from_pretrained(
-        "OpenGVLab/InternVL3-8B-hf", device_map=DEVICE, torch_dtype=DTYPE
-    ),
+    # "InternVL3-8B-hf": AutoModelForImageTextToText.from_pretrained(
+    #     "OpenGVLab/InternVL3-8B-hf", device_map=DEVICE, torch_dtype=DTYPE
+    # ),
 }
 
 PROCESSORS = {
@@ -131,7 +131,7 @@ PROCESSORS = {
     "qwen2.5-vl-3b-instruct": load_processor("Qwen/Qwen2.5-VL-3B-Instruct"),
     "InternVL3-1B-hf": load_processor("OpenGVLab/InternVL3-1B-hf"),
     "InternVL3-2B-hf": load_processor("OpenGVLab/InternVL3-2B-hf"),
-    "InternVL3-8B-hf": load_processor("OpenGVLab/InternVL3-8B-hf"),
+    # "InternVL3-8B-hf": load_processor("OpenGVLab/InternVL3-8B-hf"),
 }
 logger.debug("Models and Processors Loaded!")
 
@@ -144,6 +144,7 @@ def inference(
     custom_fps: int = 8,
     max_tokens: int = 256,
 ):
+    s_time = time.time()
     # default processor
     # processor, model = PROCESSOR, MODEL
     # processor = load_processor()
@@ -225,10 +226,13 @@ def inference(
                 output_text = processor.decode(
                     output[0, inputs["input_ids"].shape[1] :], skip_special_tokens=True
                 )
-                logger.debug(output_text)
             case _:
                 raise ValueError(f"{model_name} is not currently supported")
-    return output_text
+    return {
+        "output_text": output_text,
+        "fps": fps,
+        "inference_time": time.time() - s_time,
+    }
 
 
 demo = gr.Interface(
