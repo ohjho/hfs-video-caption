@@ -114,12 +114,16 @@ MODEL_ZOO = {
         use_flash_attention=False,
         apply_quantization=False,
     ),
+    "OpenGVLab/InternVL3-1B-hf": AutoModelForImageTextToText.from_pretrained(
+        "OpenGVLab/InternVL3-1B-hf", device_map=DEVICE, torch_dtype=DTYPE
+    ),
 }
 
 PROCESSORS = {
     "qwen2.5-vl-7b-cam-motion-preview": load_processor("Qwen/Qwen2.5-VL-7B-Instruct"),
     "qwen2.5-vl-7b-instruct": load_processor("Qwen/Qwen2.5-VL-7B-Instruct"),
     "qwen2.5-vl-3b-instruct": load_processor("Qwen/Qwen2.5-VL-3B-Instruct"),
+    "OpenGVLab/InternVL3-1B-hf": load_processor("OpenGVLab/InternVL3-1B-hf"),
 }
 logger.debug("Models and Processors Loaded!")
 
@@ -206,7 +210,7 @@ demo = gr.Interface(
             minimum=0,
             step=1,
         ),
-        gr.slider(
+        gr.Slider(
             label="Max Tokens",
             info="maximum number of tokens to generate",
             value=128,
