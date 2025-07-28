@@ -233,7 +233,7 @@ def inference(
 
                 # Inference
                 generated_ids = model.generate(
-                    **inputs, max_new_tokens=max_tokens, temperature=temperature
+                    **inputs, max_new_tokens=max_tokens, temperature=float(temperature)
                 )
                 generated_ids_trimmed = [
                     out_ids[len(in_ids) :]
@@ -255,7 +255,7 @@ def inference(
                 ).to("cuda", dtype=DTYPE)
 
                 output = model.generate(
-                    **inputs, max_new_tokens=max_tokens, temperature=temperature
+                    **inputs, max_new_tokens=max_tokens, temperature=float(temperature)
                 )
                 output_text = processor.decode(
                     output[0, inputs["input_ids"].shape[1] :], skip_special_tokens=True
