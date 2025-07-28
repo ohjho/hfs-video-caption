@@ -214,6 +214,7 @@ def inference(
                 ).to("cuda", dtype=DTYPE)
 
                 output = model.generate(**inputs, max_new_tokens=max_tokens)
+                logger.debug(output)
                 output_text = processor.decode(
                     output[0, inputs["input_ids"].shape[1] :], skip_special_tokens=True
                 )
