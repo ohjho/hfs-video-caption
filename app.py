@@ -114,7 +114,7 @@ MODEL_ZOO = {
         use_flash_attention=False,
         apply_quantization=False,
     ),
-    "OpenGVLab/InternVL3-1B-hf": AutoModelForImageTextToText.from_pretrained(
+    "InternVL3-1B-hf": AutoModelForImageTextToText.from_pretrained(
         "OpenGVLab/InternVL3-1B-hf", device_map=DEVICE, torch_dtype=DTYPE
     ),
 }
@@ -123,7 +123,7 @@ PROCESSORS = {
     "qwen2.5-vl-7b-cam-motion-preview": load_processor("Qwen/Qwen2.5-VL-7B-Instruct"),
     "qwen2.5-vl-7b-instruct": load_processor("Qwen/Qwen2.5-VL-7B-Instruct"),
     "qwen2.5-vl-3b-instruct": load_processor("Qwen/Qwen2.5-VL-3B-Instruct"),
-    "OpenGVLab/InternVL3-1B-hf": load_processor("OpenGVLab/InternVL3-1B-hf"),
+    "InternVL3-1B-hf": load_processor("OpenGVLab/InternVL3-1B-hf"),
 }
 logger.debug("Models and Processors Loaded!")
 
@@ -162,38 +162,63 @@ def inference(
         }
     ]
 
-    text = processor.apply_chat_template(
-        messages, tokenize=False, add_generation_prompt=True
-    )
-    image_inputs, video_inputs, video_kwargs = process_vision_info(
-        messages, return_video_kwargs=True
-    )
+    # text = processor.apply_chat_template(
+    #     messages, tokenize=False, add_generation_prompt=True
+    # )
+    # image_inputs, video_inputs, video_kwargs = process_vision_info(
+    #     messages, return_video_kwargs=True
+    # )
 
     # This prevents PyTorch from building the computation graph for gradients,
     # saving a significant amount of memory for intermediate activations.
     with torch.no_grad():
-        inputs = processor(
-            text=[text],
-            images=image_inputs,
-            videos=video_inputs,
-            # fps=fps,
-            padding=True,
-            return_tensors="pt",
-            **video_kwargs,
-        )
-        inputs = inputs.to("cuda")
+        model_family = model_name.split("-")[0]
+        match model_family:
+            case "qwen2.5":
+                text = processor.apply_chat_template(
+                    messages, tokenize=False, add_generation_prompt=True
+                )
+                image_inputs, video_inputs, video_kwargs = process_vision_info(
+                    messages, return_video_kwargs=True
+                )
+                inputs = processor(
+                    text=[text],
+                    images=image_inputs,
+                    videos=video_inputs,
+                    # fps=fps,
+                    padding=True,
+                    return_tensors="pt",
+                    **video_kwargs,
+                )
+                inputs = inputs.to("cuda")
 
-        # Inference
-        generated_ids = model.generate(**inputs, max_new_tokens=max_tokens)
-        generated_ids_trimmed = [
-            out_ids[len(in_ids) :]
-            for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
-        ]
-        output_text = processor.batch_decode(
-            generated_ids_trimmed,
-            skip_special_tokens=True,
-            clean_up_tokenization_spaces=False,
-        )
+                # Inference
+                generated_ids = model.generate(**inputs, max_new_tokens=max_tokens)
+                generated_ids_trimmed = [
+                    out_ids[len(in_ids) :]
+                    for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
+                ]
+                output_text = processor.batch_decode(
+                    generated_ids_trimmed,
+                    skip_special_tokens=True,
+                    clean_up_tokenization_spaces=False,
+                )
+            case "InternVL3":
+                inputs = processor.apply_chat_template(
+                    messages,
+                    add_generation_prompt=True,
+                    tokenize=True,
+                    return_dict=True,
+                    return_tensors="pt",
+                    # num_frames = 8
+                ).to("cuda", dtype=DTYPE)
+
+                output = model.generate(**inputs, max_new_tokens=max_tokens)
+                output_text = processor.decode(
+                    output[0, inputs["input_ids"].shape[1] :], skip_special_tokens=True
+                )
+            case _:
+                raise ValueError(f"{model_name} is not currently supported")
     return output_text
 
 
