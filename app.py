@@ -229,7 +229,7 @@ demo = gr.Interface(
         gr.Video(label="Input Video"),
         gr.Textbox(
             label="Prompt",
-            line=3,
+            lines=3,
             info="[cam motion](https://huggingface.co/chancharikm/qwen2.5-vl-7b-cam-motion-preview)",
             value="Describe the camera motion in this video.",
         ),
