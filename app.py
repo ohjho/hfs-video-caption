@@ -3,6 +3,7 @@ import gradio as gr
 from transformers import (
     Qwen2_5_VLForConditionalGeneration,
     AutoModelForImageTextToText,
+    Gemma3nForConditionalGeneration,
     AutoProcessor,
     BitsAndBytesConfig,
 )
@@ -93,6 +94,10 @@ def load_model(
             model = AutoModelForImageTextToText.from_pretrained(
                 model_name, **common_args
             )
+        case "gemma":
+            model = Gemma3nForConditionalGeneration.from_pretrained(
+                model_name, **common_args
+            )
         case _:
             raise ValueError(f"Unsupported model family: {model_family}")
 
@@ -141,6 +146,11 @@ MODEL_ZOO = {
         use_flash_attention=False,
         apply_quantization=True,
     ),
+    "gemma-3n-e4b-it": load_model(
+        model_name="google/gemma-3n-e4b-it",
+        use_flash_attention=False,
+        apply_quantization=True,
+    ),
 }
 
 PROCESSORS = {
@@ -149,7 +159,8 @@ PROCESSORS = {
     "qwen2.5-vl-3b-instruct": load_processor("Qwen/Qwen2.5-VL-3B-Instruct"),
     "InternVL3-1B-hf": load_processor("OpenGVLab/InternVL3-1B-hf"),
     "InternVL3-2B-hf": load_processor("OpenGVLab/InternVL3-2B-hf"),
-    # "InternVL3-8B-hf": load_processor("OpenGVLab/InternVL3-8B-hf"),
+    "InternVL3-8B-hf": load_processor("OpenGVLab/InternVL3-8B-hf"),
+    "gemma-3n-e4b-it": load_processor("google/gemma-3n-e4b-it"),
 }
 logger.debug("Models and Processors Loaded!")
 
@@ -161,6 +172,7 @@ def inference(
     model_name: str = "qwen2.5-vl-7b-instruct",
     custom_fps: int = 8,
     max_tokens: int = 256,
+    temperature: float = 0.0,
 ):
     s_time = time.time()
     # default processor
@@ -220,7 +232,9 @@ def inference(
                 inputs = inputs.to("cuda")
 
                 # Inference
-                generated_ids = model.generate(**inputs, max_new_tokens=max_tokens)
+                generated_ids = model.generate(
+                    **inputs, max_new_tokens=max_tokens, temperature=temperature
+                )
                 generated_ids_trimmed = [
                     out_ids[len(in_ids) :]
                     for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
@@ -230,7 +244,7 @@ def inference(
                     skip_special_tokens=True,
                     clean_up_tokenization_spaces=False,
                 )[0]
-            case "InternVL3":
+            case "InternVL3" | "gemma":
                 inputs = processor.apply_chat_template(
                     messages,
                     add_generation_prompt=True,
@@ -240,7 +254,9 @@ def inference(
                     # num_frames = 8
                 ).to("cuda", dtype=DTYPE)
 
-                output = model.generate(**inputs, max_new_tokens=max_tokens)
+                output = model.generate(
+                    **inputs, max_new_tokens=max_tokens, temperature=temperature
+                )
                 output_text = processor.decode(
                     output[0, inputs["input_ids"].shape[1] :], skip_special_tokens=True
                 )
@@ -278,6 +294,13 @@ demo = gr.Interface(
             minimum=32,
             maximum=512,
             step=32,
+        ),
+        gr.Slider(
+            label="Temperature",
+            value=0.0,
+            minimum=0.0,
+            maximum=1.0,
+            step=0.1,
         ),
         # gr.Checkbox(label="Use Flash Attention", value=False),
         # gr.Checkbox(label="Apply Quantization", value=True),
