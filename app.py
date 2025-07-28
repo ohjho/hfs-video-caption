@@ -214,10 +214,10 @@ def inference(
                 ).to("cuda", dtype=DTYPE)
 
                 output = model.generate(**inputs, max_new_tokens=max_tokens)
-                logger.debug(output)
                 output_text = processor.decode(
                     output[0, inputs["input_ids"].shape[1] :], skip_special_tokens=True
                 )
+                logger.debug(output_text)
             case _:
                 raise ValueError(f"{model_name} is not currently supported")
     return output_text
@@ -227,7 +227,12 @@ demo = gr.Interface(
     fn=inference,
     inputs=[
         gr.Video(label="Input Video"),
-        gr.Textbox(label="Prompt", value="Describe the camera motion in this video."),
+        gr.Textbox(
+            label="Prompt",
+            line=3,
+            info="[cam motion](https://huggingface.co/chancharikm/qwen2.5-vl-7b-cam-motion-preview)",
+            value="Describe the camera motion in this video.",
+        ),
         gr.Dropdown(label="Model", choices=list(MODEL_ZOO.keys())),
         gr.Number(
             label="FPS",
